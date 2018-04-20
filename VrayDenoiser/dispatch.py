@@ -1,26 +1,16 @@
 from Deadline.DeadlineConnect import DeadlineCon
-import win32api
-import glob
-import os
+from VrayDenoiser import utils
 import subprocess
 
 class Dispatch(DeadlineCon):
     def __init__(self, host='localhost', port=8082):
         DeadlineCon.__init__(self, host, port)
-        self.webServicePath = r'\Program Files\Thinkbox\Deadline8\bin\deadlinewebservice.exe'
+        self.webServicePath = r'\Program Files\Thinkbox\*\bin\deadlinewebservice.exe'
         self.service = ''
+        self.runWebService()
     
     def runWebService(self):
-        def getWebServiceLoacation():
-            drives = win32api.GetLogicalDriveStrings()
-            drives = drives.split('\000')[:-1]
-            for d in drives:
-                exe = glob.glob(d + self.webServicePath)[0]
-                if os.path.isfile(exe):
-                    return exe
-            return None
-        
-        serv = getWebServiceLoacation()
+        serv = utils.findFile(self.webServicePath)
         if serv:
             self.service = subprocess.Popen(serv, shell=True)
         else: self.service = ''
@@ -46,7 +36,6 @@ class Dispatch(DeadlineCon):
 
 if __name__ == '__main__':
     deadline = Dispatch()
-    deadline.runWebService()
     print (deadline.getPools())
-    deadline.killWebService()
+#     deadline.killWebService()
     
