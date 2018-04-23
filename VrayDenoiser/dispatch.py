@@ -12,20 +12,15 @@ class Dispatch(DeadlineCon):
     def runWebService(self):
         serv = utils.findFile(self.webServicePath)
         if serv:
-            self.service = subprocess.Popen(serv, shell=True)
-        else: self.service = ''
+            self.service = subprocess.Popen(serv, shell=True, stdin=subprocess.PIPE)
+        else:
+            self.service = ''
+            print('Could not locate deadlinewebservice.exe. Make sure Deadline is installed')
             
-    def killWebService(self):
+    def stopWebService(self):
         try:
-            cmd = ['taskkill', '/F', '/T', '/PID', str(self.service.pid)]
-            subprocess.call(cmd)
-        except: print('Could not kill Deadline Web Service')
-    
-    def getJobs(self):
-        return self.Jobs.GetJobs()
-    
-    def getPools(self):
-        return self.Pools.GetPoolNames()
+            self.service.stdin.write('/exit\n'.encode())
+        except: print('Could not Shut Down Deadline Web Service')
     
     def SubmitJob(self, jobInfo, pluginInfo):
         try:
@@ -36,6 +31,6 @@ class Dispatch(DeadlineCon):
 
 if __name__ == '__main__':
     deadline = Dispatch()
-    print (deadline.getPools())
-#     deadline.killWebService()
+    print (deadline.Pools.GetPoolNames())
+    deadline.stopWebService()
     
