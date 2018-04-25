@@ -1,7 +1,6 @@
 ############# Failed to load platform plugin "windows" fix #############
 import PyQt5
 import os
-from setuptools.dist import sequence
 dirname = os.path.dirname(PyQt5.__file__)
 plugin_path = os.path.join(dirname, 'plugins', 'platforms')
 os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
@@ -19,7 +18,7 @@ from VrayDenoiser.dispatch import Dispatch
 
 class denoiserDefaults():
     inputFile = ''
-    mode = 'default'
+    mode = 'mild'
     elements = 0
     boost = 0
     skipExisting = 1
@@ -30,8 +29,8 @@ class denoiserDefaults():
     useGpu = 2
     verboseLevel = 3
     abortOnOpenCLError = 0
-    strength = 1.0
-    radius = 10
+    strength = 0.5
+    radius = 5
     frameBlend = 1
     strips = -1
     autoRadius = 0
@@ -47,7 +46,7 @@ class mainWindow(QMainWindow):
         self.ui.show()
         
         self.formats = ('.exr','.vrimg')
-        self.denoised = '_denoised_'
+        self.denoised = '_denoised'
         self.denoiserPath = utils.findFile(r"\Program Files\Chaos Group\V-Ray\3dsmax*\tools\vdenoise.exe")
 #         self.deadline = Dispatch()
 #         pools = self.deadline.Pools.GetPoolNames()
@@ -129,8 +128,9 @@ class mainWindow(QMainWindow):
     def getSeqInfo(self, file): # big thanks to Christopher Evans at http://www.chrisevans3d.com
         d = os.path.dirname(file)
         f = os.path.basename(file)
+        fName = f.split('.')[:-1][-1]
         segNum = re.findall(r'\d+', f)
-        if segNum:
+        if segNum and fName.endswith(segNum[-1]):
             segNum = segNum[-1]
             numPad = len(segNum)
             baseName = f.split(segNum)[0]
@@ -175,11 +175,30 @@ class mainWindow(QMainWindow):
     def buildCommand(self):
         if self.ui.table.rowCount() != 0:
             row = self.ui.table.currentRow()
-            command = ''
-            command += self.denoiserPath + ' '
-            command += '-inputFile '
-            command += '"' + self.ui.table.item(row, 4).text() + '" '
-            self.ui.command.setText(command)
+            # executable
+            cmd = ''
+            cmd += '"' + self.denoiserPath + '"'
+            # settings
+#             cmd += ' -mode=' + self.ui.mode.currentText()
+            cmd += ' -elements=' + str(int(self.ui.elements.isChecked()))
+            cmd += ' -boost=' + self.ui.boost.currentText()
+            cmd += ' -skipExisting=' + str(int(self.ui.skipExisting.isChecked()))
+            cmd += ' -display=' + str(int(self.ui.display.isChecked()))
+            cmd += ' -autoClose=' + str(int(self.ui.autoClose.isChecked()))
+            cmd += ' -useGpu=' + self.ui.useGpu.currentText()
+            cmd += ' -verboseLevel=' + self.ui.verboseLevel.currentText()
+            cmd += ' -strength=' + str(self.ui.strength.value())
+            cmd += ' -radius=' + str(self.ui.radius.value())
+            cmd += ' -frameBlend=' + str(self.ui.frameBlend.value())
+            cmd += ' -strips=' + str(self.ui.strips.value())
+            cmd += ' -autoRadius=' + str(int(self.ui.autoRadius.isChecked()))
+            cmd += ' -threshold=' + str(self.ui.threshold.value())
+            cmd += ' -memLimit=' + str(self.ui.memLimit.value())
+            # input
+            cmd += ' -inputFile='
+            cmd += '"' + self.ui.table.item(row, 4).text() + '"'
+            self.ui.command.setText(cmd)
+            return cmd
         
 if __name__ == '__main__':
     import sys
