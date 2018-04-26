@@ -1,5 +1,6 @@
 import win32api
 import glob
+import time
 
 def findFile(path):
     '''
@@ -13,3 +14,14 @@ def findFile(path):
         if files:
             return files[-1] # return last element
     return None
+
+def tryFunction(function, max_try=5):
+    result = []
+    for i in range(max_try):
+        try:
+            result = function()
+            break
+        except:
+            print('Failed to call ' + str(function) + '. Will try again in 1s')
+            time.sleep(1)
+    return result

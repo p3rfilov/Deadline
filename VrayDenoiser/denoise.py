@@ -1,18 +1,22 @@
-############# Failed to load platform plugin "windows" fix #############
-import PyQt5
 import os
-dirname = os.path.dirname(PyQt5.__file__)
-plugin_path = os.path.join(dirname, 'plugins', 'platforms')
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
-########################################################################
-
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QTableWidgetItem, QWidget, QHBoxLayout, QCheckBox, QHeaderView, qApp
-from PyQt5 import QtGui, QtCore
-from PyQt5.uic import loadUi
+import sys
 import time
 import glob
 import re
 
+############# Failed to load platform plugin "windows" fix #############
+if getattr(sys, 'frozen', False):
+    app_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    os.system('setx QT_QPA_PLATFORM_PLUGIN_PATH ' + app_path)
+    time.sleep(0.5)
+elif __file__:
+    app_path = os.path.dirname(os.path.abspath(__file__))
+    os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = app_path
+########################################################################
+
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QTableWidgetItem, QWidget, QHBoxLayout, QCheckBox, QHeaderView, qApp
+from PyQt5 import QtCore
+from PyQt5.uic import loadUi
 from VrayDenoiser import utils
 from VrayDenoiser.dispatch import Dispatch
 
@@ -47,18 +51,29 @@ class mainWindow(QMainWindow):
         
         self.formats = ('.exr','.vrimg')
         self.denoised = '_denoised'
+        self.defaultPool = 'animation_daytime'
         self.denoiserPath = utils.findFile(r"\Program Files\Chaos Group\V-Ray\3dsmax*\tools\vdenoise.exe")
-#         self.deadline = Dispatch()
-#         pools = self.deadline.Pools.GetPoolNames()
-#         for p in pools: self.ui.pools.addItem(p)
+        self.deadline = Dispatch()
         
+        self.setupPools()
         self.setupTable()
+        
         self.ui.selectFolder.clicked.connect(self.populateTable)
-        self.ui.table.itemSelectionChanged.connect(self.buildCommand)
+        self.ui.table.itemSelectionChanged.connect(self.currentRowChenged)
+        self.ui.checkAll.clicked.connect(lambda: self.ckeckAllRows(True))
+        self.ui.uncheckAll.clicked.connect(lambda: self.ckeckAllRows(False))
         self.ui.submit.clicked.connect(self.submitJobs)
         self.ui.closeEvent = self.closeEvent # shut down web service before exiting
     
+    def setupPools(self):
+        pools = utils.tryFunction(self.deadline.Pools.GetPoolNames)
+        for p in pools: self.ui.pools.addItem(p)
+        index = self.ui.pools.findText(self.defaultPool, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.ui.pools.setCurrentIndex(index)
+    
     def setupTable(self):
+        self.ui.progressBar.setValue(0)
         table = self.ui.table
         table.setRowCount(0)
         table.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
@@ -69,6 +84,13 @@ class mainWindow(QMainWindow):
             table.setColumnWidth(i, 60)
             table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Fixed)
         table.setColumnHidden(4,True)
+    
+    def ckeckAllRows(self, state):
+        table = self.ui.table
+        count = table.rowCount()
+        if count:
+            for row in range(count):
+                table.cellWidget(row,0).layout().itemAt(0).widget().setChecked(state)
         
     def closeEvent(self, event):
         self.deadline.stopWebService()
@@ -79,7 +101,7 @@ class mainWindow(QMainWindow):
         sequences = self.loadSequences()
         if sequences:
             table = self.ui.table
-            table.setRowCount(0)
+            self.setupTable()
             for s in reversed(sequences):
                 table.insertRow(0)
                 i2 = QTableWidgetItem(s['baseName'])            # name
@@ -169,41 +191,76 @@ class mainWindow(QMainWindow):
         return sorted(allFiles)
     
     def submitJobs(self):
-        print(self.ui.table.cellWidget(0,0).layout().takeAt(0).widget().isChecked())
-        print('jobs submitted')
+        self.ui.progressBar.setValue(0)
+        table = self.ui.table
+        count = table.rowCount()
+        index = 0
+        if count:
+            for row in range(count):
+                if table.cellWidget(row,0).layout().itemAt(0).widget().isChecked():
+                    result = self.buildJobInfoAndSubmit(row)
+#                     if not result:
+#                         p = QtGui.QPalette
+#                         p.setColor(QtGui.QPalette.Highlight, QtGui.QColor(QtCore.Qt.red))
+#                         self.ui.progressBar.setPalette(p)
+                index += 1
+                self.ui.progressBar.setValue(index/float(count)*100)
+                QApplication.processEvents()
     
-    def buildCommand(self):
-        if self.ui.table.rowCount() != 0:
-            row = self.ui.table.currentRow()
-            # executable
+    def buildJobInfoAndSubmit(self, row):
+        table = self.ui.table
+        name = table.item(row, 1).text()
+        batch = os.path.basename(os.path.dirname(table.item(row, 4).text())) + ' - Denoiser'
+        cmd = self.buildCommand(row)
+        jobInfo = {
+            'Name': name,
+            'BatchName': batch,
+            'Frames': '0-' + str(self.ui.tasks.value()-1),
+            'Pool': self.ui.pools.currentText(),
+            'Priority': str(self.ui.priority.value()),
+            'Plugin': 'CommandLine'
+            }
+        pluginInfo = {
+            'Executable': self.denoiserPath,
+            'Arguments': cmd,
+            'StartupDirectory': ''
+            }
+        result = self.deadline.SubmitJob(jobInfo, pluginInfo)
+        return result
+    
+    def currentRowChenged(self):
+        row = self.ui.table.currentRow()
+        self.buildCommand(row)
+    
+    def buildCommand(self, row):
+        if self.ui.table.rowCount():
             cmd = ''
-            cmd += '"' + self.denoiserPath + '"'
-            # settings
-#             cmd += ' -mode=' + self.ui.mode.currentText()
-            cmd += ' -elements=' + str(int(self.ui.elements.isChecked()))
-            cmd += ' -boost=' + self.ui.boost.currentText()
-            cmd += ' -skipExisting=' + str(int(self.ui.skipExisting.isChecked()))
-            cmd += ' -display=' + str(int(self.ui.display.isChecked()))
-            cmd += ' -autoClose=' + str(int(self.ui.autoClose.isChecked()))
-            cmd += ' -useGpu=' + self.ui.useGpu.currentText()
-            cmd += ' -verboseLevel=' + self.ui.verboseLevel.currentText()
-            cmd += ' -strength=' + str(self.ui.strength.value())
-            cmd += ' -radius=' + str(self.ui.radius.value())
-            cmd += ' -frameBlend=' + str(self.ui.frameBlend.value())
-            cmd += ' -strips=' + str(self.ui.strips.value())
-            cmd += ' -autoRadius=' + str(int(self.ui.autoRadius.isChecked()))
-            cmd += ' -threshold=' + str(self.ui.threshold.value())
-            cmd += ' -memLimit=' + str(self.ui.memLimit.value())
-            # input
-            cmd += ' -inputFile='
-            cmd += '"' + self.ui.table.item(row, 4).text() + '"'
-            self.ui.command.setText(cmd)
+            if row >= 0:
+#                 cmd += '"' + self.denoiserPath + '"'
+    #             cmd += ' -mode=' + self.ui.mode.currentText()
+                cmd += ' -elements=' + str(int(self.ui.elements.isChecked()))
+                cmd += ' -boost=' + self.ui.boost.currentText()
+                cmd += ' -skipExisting=' + str(int(self.ui.skipExisting.isChecked()))
+                cmd += ' -display=' + str(int(self.ui.display.isChecked()))
+                cmd += ' -autoClose=' + str(int(self.ui.autoClose.isChecked()))
+                cmd += ' -useGpu=' + self.ui.useGpu.currentText()
+                cmd += ' -verboseLevel=' + self.ui.verboseLevel.currentText()
+                cmd += ' -strength=' + str(self.ui.strength.value())
+                cmd += ' -radius=' + str(self.ui.radius.value())
+                cmd += ' -frameBlend=' + str(self.ui.frameBlend.value())
+                cmd += ' -strips=' + str(self.ui.strips.value())
+                cmd += ' -autoRadius=' + str(int(self.ui.autoRadius.isChecked()))
+                cmd += ' -threshold=' + str(self.ui.threshold.value())
+                cmd += ' -memLimit=' + str(self.ui.memLimit.value())
+                cmd += ' -inputFile='
+                cmd += '"' + self.ui.table.item(row, 4).text() + '"'
+            self.ui.command.setText('"' + self.denoiserPath + '"' + cmd)
             return cmd
         
 if __name__ == '__main__':
-    import sys
     from PyQt5.QtWidgets import QApplication
     
+    QApplication.addLibraryPath(os.path.dirname(__file__))
     app = QApplication(sys.argv)
     window = mainWindow()
     sys.exit(app.exec_())
