@@ -7,7 +7,7 @@ import re
 ############# Failed to load platform plugin "windows" fix #############
 if getattr(sys, 'frozen', False):
     app_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    os.system('setx QT_QPA_PLATFORM_PLUGIN_PATH ' + app_path)
+    os.system('setx QT_QPA_PLATFORM_PLUGIN_PATH ' + '"' + app_path + '"')
     time.sleep(0.5)
 elif __file__:
     app_path = os.path.dirname(os.path.abspath(__file__))
