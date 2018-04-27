@@ -25,14 +25,14 @@ class denoiserDefaults():
     mode = 'mild'
     elements = 0
     boost = 0
-    skipExisting = 1
+    skipExisting = 0
     frames = 0
     display = 1
     autoClose = 1
     useCpu = 0
     useGpu = 2
     verboseLevel = 3
-    abortOnOpenCLError = 0
+    abortOnOpenCLError = 1
     strength = 0.5
     radius = 5
     frameBlend = 1
@@ -51,7 +51,7 @@ class mainWindow(QMainWindow):
         
         self.formats = ('.exr','.vrimg')
         self.denoised = '_denoised'
-        self.defaultPool = 'animation_daytime'
+        self.defaultPool = 'gpu_rendering'
         self.denoiserPath = utils.findFile(r"\Program Files\Chaos Group\V-Ray\3dsmax*\tools\vdenoise.exe")
         self.deadline = Dispatch()
         
@@ -252,6 +252,7 @@ class mainWindow(QMainWindow):
                 cmd += ' -autoRadius=' + str(int(self.ui.autoRadius.isChecked()))
                 cmd += ' -threshold=' + str(self.ui.threshold.value())
                 cmd += ' -memLimit=' + str(self.ui.memLimit.value())
+                cmd += ' -abortOnOpenCLError=' + str(int(self.ui.abortOnOpenCLError.isChecked()))
                 cmd += ' -inputFile='
                 cmd += '"' + self.ui.table.item(row, 4).text() + '"'
             self.ui.command.setText('"' + self.denoiserPath + '"' + cmd)
