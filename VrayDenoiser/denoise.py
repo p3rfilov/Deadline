@@ -48,6 +48,7 @@ class mainWindow(QMainWindow):
         self.dir = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.dir, 'ui_mainWindow.ui'))
         self.ui.show()
+        self.ui.setWindowTitle('V-Ray Denoise - Deadline Submission - ' + 'v0.2')
         
         self.formats = ('.exr','.vrimg')
         self.denoised = '_denoised'
@@ -57,12 +58,14 @@ class mainWindow(QMainWindow):
         
         self.setupPools()
         self.setupTable()
+        self.changeMode()
         
         self.ui.selectFolder.clicked.connect(self.populateTable)
         self.ui.table.itemSelectionChanged.connect(self.currentRowChenged)
         self.ui.checkAll.clicked.connect(lambda: self.ckeckAllRows(True))
         self.ui.uncheckAll.clicked.connect(lambda: self.ckeckAllRows(False))
         self.ui.submit.clicked.connect(self.submitJobs)
+        self.ui.mode.currentIndexChanged.connect(self.changeMode)
         self.ui.closeEvent = self.closeEvent # shut down web service before exiting
     
     def setupPools(self):
@@ -84,6 +87,24 @@ class mainWindow(QMainWindow):
             table.setColumnWidth(i, 60)
             table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Fixed)
         table.setColumnHidden(4,True)
+        
+    def changeMode(self):
+        mode = self.ui.mode.currentText()
+        if mode == 'custom':
+            self.ui.strength.setEnabled(True)
+            self.ui.radius.setEnabled(True)
+        else:
+            self.ui.strength.setEnabled(False)
+            self.ui.radius.setEnabled(False)
+        if mode == 'mild':
+            self.ui.strength.setValue(0.5)
+            self.ui.radius.setValue(5.0)
+        elif mode == 'default':
+            self.ui.strength.setValue(1.0)
+            self.ui.radius.setValue(10.0)
+        elif mode == 'strong':
+            self.ui.strength.setValue(2.0)
+            self.ui.radius.setValue(15.0)
     
     def ckeckAllRows(self, state):
         table = self.ui.table
