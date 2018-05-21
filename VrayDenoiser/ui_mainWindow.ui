@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>711</width>
-    <height>709</height>
+    <height>727</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -50,10 +50,10 @@
          <enum>QAbstractItemView::SelectRows</enum>
         </property>
         <property name="sortingEnabled">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
         <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-         <bool>true</bool>
+         <bool>false</bool>
         </attribute>
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>false</bool>
@@ -692,7 +692,7 @@
               <string>Skip Existing</string>
              </property>
              <property name="checked">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
             </widget>
            </item>
