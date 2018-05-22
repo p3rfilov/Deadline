@@ -15,7 +15,7 @@ elif __file__:
 ########################################################################
 
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QTableWidgetItem, QWidget, QHBoxLayout, QCheckBox, QHeaderView, qApp
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui
 from PyQt5.uic import loadUi
 from VrayDenoiser import utils
 from VrayDenoiser.dispatch import Dispatch
@@ -48,14 +48,14 @@ class mainWindow(QMainWindow):
         self.dir = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.dir, 'ui_mainWindow.ui'))
         self.ui.show()
-        self.ui.setWindowTitle('V-Ray Denoise - Deadline Submission - ' + 'v0.2')
+        self.ui.setWindowTitle('V-Ray Denoise - Deadline Submission - ' + 'v0.3')
         
         self.formats = ('.exr','.vrimg')
         self.denoised = '_denoised'
         self.defaultPool = 'gpu_rendering'
         self.denoiserPath = utils.findFile(r"\Program Files\Chaos Group\V-Ray\3dsmax*\tools\vdenoise.exe")
         self.deadline = Dispatch()
-        
+         
         self.setupPools()
         self.setupTable()
         self.changeMode()
@@ -148,6 +148,9 @@ class mainWindow(QMainWindow):
                 table.setItem(0, 2, i3)
                 table.setItem(0, 3, i4)
                 table.setItem(0, 4, i5)
+                if s['missingFrames']:
+                    table.item(0, 2).setBackground(QtGui.QColor(255,0,0,120))
+                    table.item(0, 2).setToolTip('The sequence is incomplete!\nMissing frames: ' + str(s['missingFrames']))
             table.setCurrentCell(0,0)
         
     def loadSequences(self):
@@ -169,6 +172,7 @@ class mainWindow(QMainWindow):
         return sequences
     
     def getSeqInfo(self, file): # big thanks to Christopher Evans at http://www.chrisevans3d.com
+        missingFrames = []
         d = os.path.dirname(file)
         f = os.path.basename(file)
         fName = f.split('.')[:-1][-1]
@@ -181,8 +185,21 @@ class mainWindow(QMainWindow):
             globString = baseName
             for i in range(0,numPad): globString += '?'
             inputFile = (d + '\\' + globString + f.split(segNum)[1]).replace('\\','/')
-            theGlob = glob.glob(inputFile)
-            numFrames = len(theGlob)
+            allFiles = sorted(glob.glob(inputFile))
+            numFrames = len(allFiles)
+            
+            # find missing frames
+            first = re.findall(r'\d+', os.path.basename(allFiles[0]))[-1]
+            last = re.findall(r'\d+', os.path.basename(allFiles[-1]))[-1]
+            expectedRange = len(range(int(first), int(last)+1))
+            if expectedRange != numFrames:
+                index = int(first)
+                for name in allFiles:
+                    number = int(name.replace('.' + fileType, '')[-numPad:])
+                    if number != index:
+                        missingFrames.append(index)
+                        index += 1
+                    index += 1
         else:
             fileType = f.split('.')[-1]
             baseName = f.split('.'+ fileType)[0]
@@ -192,7 +209,8 @@ class mainWindow(QMainWindow):
                 'baseName':baseName,
                 'fileType':fileType,
                 'numFrames':numFrames,
-                'inputFile':inputFile
+                'inputFile':inputFile,
+                'missingFrames':missingFrames
                 }
         
     def getFilesFromFolder(self):
@@ -220,10 +238,6 @@ class mainWindow(QMainWindow):
             for row in range(count):
                 if table.cellWidget(row,0).layout().itemAt(0).widget().isChecked():
                     result = self.buildJobInfoAndSubmit(row)
-#                     if not result:
-#                         p = QtGui.QPalette
-#                         p.setColor(QtGui.QPalette.Highlight, QtGui.QColor(QtCore.Qt.red))
-#                         self.ui.progressBar.setPalette(p)
                 index += 1
                 self.ui.progressBar.setValue(index/float(count)*100)
                 QApplication.processEvents()
@@ -257,8 +271,6 @@ class mainWindow(QMainWindow):
         if self.ui.table.rowCount():
             cmd = ''
             if row >= 0:
-#                 cmd += '"' + self.denoiserPath + '"'
-    #             cmd += ' -mode=' + self.ui.mode.currentText()
                 cmd += ' -elements=' + str(int(self.ui.elements.isChecked()))
                 cmd += ' -boost=' + self.ui.boost.currentText()
                 cmd += ' -skipExisting=' + str(int(self.ui.skipExisting.isChecked()))
@@ -287,4 +299,3 @@ if __name__ == '__main__':
     window = mainWindow()
     sys.exit(app.exec_())
     
-#     print(denoiserDefaults.__dict__.keys())
