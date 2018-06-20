@@ -68,6 +68,7 @@ class mainWindow(QMainWindow):
         self.ui.mode.currentIndexChanged.connect(self.changeMode)
         self.ui.closeEvent = self.closeEvent # shut down web service before exiting
     
+    '''Collect available pools and select the default one if found'''
     def setupPools(self):
         pools = utils.tryFunction(self.deadline.Pools.GetPoolNames)
         for p in pools: self.ui.pools.addItem(p)
@@ -87,7 +88,8 @@ class mainWindow(QMainWindow):
             table.setColumnWidth(i, 60)
             table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Fixed)
         table.setColumnHidden(4,True)
-        
+    
+    '''On denoise mode changed, set parameters and enable/disable strength and radius spinners'''
     def changeMode(self):
         mode = self.ui.mode.currentText()
         if mode == 'custom':
@@ -112,7 +114,8 @@ class mainWindow(QMainWindow):
         if count:
             for row in range(count):
                 table.cellWidget(row,0).layout().itemAt(0).widget().setChecked(state)
-        
+    
+    '''Shut down web service before closing'''    
     def closeEvent(self, event):
         self.deadline.stopWebService()
         time.sleep(0.5)
@@ -152,7 +155,8 @@ class mainWindow(QMainWindow):
                     table.item(0, 2).setBackground(QtGui.QColor(255,0,0,120))
                     table.item(0, 2).setToolTip('This sequence is incomplete!\nMissing frames: ' + str(s['missingFrames']))
             table.setCurrentCell(0,0)
-        
+    
+    '''Collect and return all sequences in a given folder (getFilesFromFolder)'''    
     def loadSequences(self):
         sequences = []
         files = self.getFilesFromFolder()
@@ -171,13 +175,18 @@ class mainWindow(QMainWindow):
                 sequences.append(s)
         return sequences
     
+    '''
+    Collects sequence info (number of frames, format, etc.)
+    input: file path
+    output: dictionary
+    '''
     def getSeqInfo(self, file): # big thanks to Christopher Evans at http://www.chrisevans3d.com
         missingFrames = []
         d = os.path.dirname(file)
         f = os.path.basename(file)
         fName = f.split('.')[:-1][-1]
         segNum = re.findall(r'\d+', f)
-        if segNum and fName.endswith(segNum[-1]):
+        if segNum and fName.endswith(segNum[-1]): # file is part of a sequence 
             segNum = segNum[-1]
             numPad = len(segNum)
             baseName = f.split(segNum)[0]
@@ -200,7 +209,7 @@ class mainWindow(QMainWindow):
                         missingFrames.append(index)
                         index += 1
                     index += 1
-        else:
+        else: # file is NOT part of a sequence
             fileType = f.split('.')[-1]
             baseName = f.split('.'+ fileType)[0]
             numFrames = 1
@@ -212,7 +221,8 @@ class mainWindow(QMainWindow):
                 'inputFile':inputFile,
                 'missingFrames':missingFrames
                 }
-        
+    
+    '''Returns a sorted list of files in a picked folder. Supports recursive nested folder scanning'''
     def getFilesFromFolder(self):
         allFiles = []
         userhome = os.path.expanduser('~')

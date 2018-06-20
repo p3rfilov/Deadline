@@ -1,9 +1,12 @@
 from Deadline.DeadlineConnect import DeadlineCon
 from VrayDenoiser import utils
 import subprocess
-import time
 
 class Dispatch(DeadlineCon):
+    '''
+    Convenience class for managing the Deadline Web Service.
+    Locates (utils.findFile) and runs deadlinewebservice.exe
+    '''
     def __init__(self, host='localhost', port=8082):
         DeadlineCon.__init__(self, host, port)
         self.webServicePath = r'\Program Files\Thinkbox\*\bin\deadlinewebservice.exe'
