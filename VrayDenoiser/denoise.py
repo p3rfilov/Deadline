@@ -150,7 +150,7 @@ class mainWindow(QMainWindow):
                 table.setItem(0, 4, i5)
                 if s['missingFrames']:
                     table.item(0, 2).setBackground(QtGui.QColor(255,0,0,120))
-                    table.item(0, 2).setToolTip('The sequence is incomplete!\nMissing frames: ' + str(s['missingFrames']))
+                    table.item(0, 2).setToolTip('This sequence is incomplete!\nMissing frames: ' + str(s['missingFrames']))
             table.setCurrentCell(0,0)
         
     def loadSequences(self):
