@@ -68,8 +68,8 @@ class mainWindow(QMainWindow):
         self.ui.mode.currentIndexChanged.connect(self.changeMode)
         self.ui.closeEvent = self.closeEvent # shut down web service before exiting
     
-    '''Collect available pools and select the default one if found'''
     def setupPools(self):
+        '''Collect available pools and select the default one if found'''
         pools = utils.tryFunction(self.deadline.Pools.GetPoolNames)
         for p in pools: self.ui.pools.addItem(p)
         index = self.ui.pools.findText(self.defaultPool, QtCore.Qt.MatchFixedString)
@@ -89,8 +89,8 @@ class mainWindow(QMainWindow):
             table.horizontalHeader().setSectionResizeMode(i, QHeaderView.Fixed)
         table.setColumnHidden(4,True)
     
-    '''On denoise mode changed, set parameters and enable/disable strength and radius spinners'''
     def changeMode(self):
+        '''On denoise mode changed, set parameters and enable/disable strength and radius spinners'''
         mode = self.ui.mode.currentText()
         if mode == 'custom':
             self.ui.strength.setEnabled(True)
@@ -114,9 +114,9 @@ class mainWindow(QMainWindow):
         if count:
             for row in range(count):
                 table.cellWidget(row,0).layout().itemAt(0).widget().setChecked(state)
-    
-    '''Shut down web service before closing'''    
+       
     def closeEvent(self, event):
+        '''Shut down web service before closing''' 
         self.deadline.stopWebService()
         time.sleep(0.5)
         qApp.quit()
@@ -155,9 +155,9 @@ class mainWindow(QMainWindow):
                     table.item(0, 2).setBackground(QtGui.QColor(255,0,0,120))
                     table.item(0, 2).setToolTip('This sequence is incomplete!\nMissing frames: ' + str(s['missingFrames']))
             table.setCurrentCell(0,0)
-    
-    '''Collect and return all sequences in a given folder (getFilesFromFolder)'''    
+       
     def loadSequences(self):
+        '''Collect and return all sequences in a given folder (getFilesFromFolder)''' 
         sequences = []
         files = self.getFilesFromFolder()
         if files:
@@ -175,12 +175,12 @@ class mainWindow(QMainWindow):
                 sequences.append(s)
         return sequences
     
-    '''
-    Collects sequence info (number of frames, format, etc.)
-    input: file path
-    output: dictionary
-    '''
     def getSeqInfo(self, file): # big thanks to Christopher Evans at http://www.chrisevans3d.com
+        '''
+        Collects sequence info (number of frames, format, etc.)
+        input: file path
+        output: dictionary
+        '''
         missingFrames = []
         d = os.path.dirname(file)
         f = os.path.basename(file)
@@ -222,8 +222,8 @@ class mainWindow(QMainWindow):
                 'missingFrames':missingFrames
                 }
     
-    '''Returns a sorted list of files in a picked folder. Supports recursive nested folder scanning'''
     def getFilesFromFolder(self):
+        '''Returns a sorted list of files in a picked folder. Supports recursive nested folder scanning'''
         allFiles = []
         userhome = os.path.expanduser('~')
         desktop = userhome + '/Desktop/'
