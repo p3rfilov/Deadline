@@ -3,6 +3,7 @@ import sys
 import time
 import glob
 import re
+import subprocess
 
 ############# Failed to load platform plugin "windows" fix #############
 if getattr(sys, 'frozen', False):
@@ -48,7 +49,7 @@ class mainWindow(QMainWindow):
         self.dir = os.path.dirname(__file__)
         self.ui = loadUi(os.path.join(self.dir, 'ui_mainWindow.ui'))
         self.ui.show()
-        self.ui.setWindowTitle('V-Ray Denoise - Deadline Submission - ' + 'v0.3')
+        self.ui.setWindowTitle('V-Ray Denoise - Deadline Submission - ' + 'v0.4')
         
         self.formats = ('.exr','.vrimg')
         self.denoised = '_denoised'
@@ -65,6 +66,7 @@ class mainWindow(QMainWindow):
         self.ui.checkAll.clicked.connect(lambda: self.ckeckAllRows(True))
         self.ui.uncheckAll.clicked.connect(lambda: self.ckeckAllRows(False))
         self.ui.submit.clicked.connect(self.submitJobs)
+        self.ui.runLocally.clicked.connect(self.runLocally)
         self.ui.mode.currentIndexChanged.connect(self.changeMode)
         self.ui.closeEvent = self.closeEvent # shut down web service before exiting
     
@@ -300,6 +302,18 @@ class mainWindow(QMainWindow):
                 cmd += '"' + self.ui.table.item(row, 4).text() + '"'
             self.ui.command.setText('"' + self.denoiserPath + '"' + cmd)
             return cmd
+        
+    def runLocally(self):
+        self.ui.progressBar.setValue(0)
+        table = self.ui.table
+        count = table.rowCount()
+        cmd = ''
+        if count:
+            for row in range(count):
+                if table.cellWidget(row,0).layout().itemAt(0).widget().isChecked():
+                    self.buildCommand(row)
+                    cmd += self.ui.command.text() + r' & '
+            service = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE)
         
 if __name__ == '__main__':
     from PyQt5.QtWidgets import QApplication
