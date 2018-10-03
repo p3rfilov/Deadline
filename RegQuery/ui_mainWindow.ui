@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>838</width>
-    <height>600</height>
+    <height>659</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,6 +41,20 @@
          </widget>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Search</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="searchInfo"/>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="Line" name="line">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -60,6 +74,34 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QPushButton" name="clear">
+            <property name="text">
+             <string>Clear</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="filter">
+            <property name="text">
+             <string>Filter</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Search</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="searchSoft"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -102,6 +144,13 @@
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QPushButton" name="folder">
+        <property name="text">
+         <string>View Folder</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
