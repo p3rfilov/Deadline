@@ -1,0 +1,1 @@
+C:\Python27\Scripts\pyinstaller.exe --noupx --noconsole "C:\Users\Administrator\OneDrive\_Scripts\__PYTHON\_Projects\Deadline\SlaveInfo\slaveInfo.py"
