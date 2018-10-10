@@ -1,10 +1,11 @@
 '''
-Registry Query tool for Deadline
+Deadline Slave Command tool
 
 Description:
 
     Provides quick access to installed software packages
     and hardware configurations of all Deadline Nodes.
+    Will support custom command submission in future releases.
 
 Features:
     
@@ -22,6 +23,7 @@ Requirements: Windows, Deadline
     
 TO DO:
     
+    - repurpose for general use, with ability to submit custom commands
     - code refactoring
     - NOT operator for search fields
     - print/save filtered reports
@@ -64,40 +66,6 @@ class Settings():
     returnCodes = os.path.join(root, 'codes')
     lic = os.path.join(root, 'licenses')
 
-class Palette():
-    '''This class changes the colour palette for a given QApplication object'''
-    @staticmethod
-    def applyDarkPalette(app):
-        '''
-        Changes the palette to a "Dark theme"
-        Inputs: QApplication object
-        Outputs: QApplication object
-        '''
-        app.setStyle('Dark Theme')
-        palette = QtGui.QPalette()
-        palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53,53,53))
-        palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.Base, QtGui.QColor(15,15,15))
-        palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(53,53,53))
-        palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53,53,53))
-        palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
-        palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(142,45,197).lighter())
-        palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
-        app.setPalette(palette)
-        return app
-    
-class Message():
-    @staticmethod
-    def vncMessage():
-        msg = QMessageBox()
-        msg.setIcon(QMessageBox.Critical)
-        msg.setText('\nCould not find VNC Viewer!\n      ')
-        msg.setWindowTitle('VNC Viewer')
-        msg.exec_()
 
 class mainWindow(QMainWindow):
     '''Main Deadline Query class'''
@@ -467,7 +435,7 @@ class mainWindow(QMainWindow):
 '''
 -------------------------------------------------
 
-Deadline Slave Info
+Deadline Slave Command tool
 
 Author: Andrej Perfilov
 Written in Python 2.7 and Qt 5.6
@@ -500,7 +468,45 @@ Requirements: Windows, Deadline
         msg.setWindowTitle('About')
         msg.exec_()
         msg.setWindowModality(QtCore.Qt.ApplicationModal)
-        
+
+
+class Message():
+    @staticmethod
+    def vncMessage():
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Critical)
+        msg.setText('\nCould not find VNC Viewer!\n      ')
+        msg.setWindowTitle('VNC Viewer')
+        msg.exec_()
+
+
+class Palette():
+    '''This class changes the colour palette for a given QApplication object'''
+    @staticmethod
+    def applyDarkPalette(app):
+        '''
+        Changes the palette to a "Dark theme"
+        Inputs: QApplication object
+        Outputs: QApplication object
+        '''
+        app.setStyle('Dark Theme')
+        palette = QtGui.QPalette()
+        palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53,53,53))
+        palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
+        palette.setColor(QtGui.QPalette.Base, QtGui.QColor(15,15,15))
+        palette.setColor(QtGui.QPalette.AlternateBase, QtGui.QColor(53,53,53))
+        palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
+        palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)
+        palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
+        palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53,53,53))
+        palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
+        palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
+        palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(142,45,197).lighter())
+        palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
+        app.setPalette(palette)
+        return app
+    
+
 if __name__ == '__main__':
     from PyQt5.QtWidgets import QApplication
     
